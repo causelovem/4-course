@@ -1,18 +1,18 @@
 # IntPalindrome
-a = eval(input())
-c = int(1)
-while c < a:
-    c *= 10
-c = int(c / 10)
+number = eval(input())
+tmp = int(1)
+while tmp < number:
+    tmp *= 10
+tmp = int(tmp / 10)
 result = 'YES'
 
-while a > 10:
-    first = int(a / c)
-    last = a % 10
-    a -= first * c
-    a = int(a / 10)
-    c = int(c / 100)
-    # print(first, ' ', last)
+while number > 10:
+    first = int(number / tmp)
+    last = number % 10
+    number -= first * tmp
+    number = int(number / 10)
+    tmp = int(tmp / 100)
+    # deleted left and right
     if (first != last):
         result = 'NO'
         break
