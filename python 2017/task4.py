@@ -12,7 +12,7 @@ while a > 10:
     a -= first * c
     a = int(a / 10)
     c = int(c / 100)
-    #print(first, ' ', last)
+    # print(first, ' ', last)
     if (first != last):
         result = 'NO'
         break
