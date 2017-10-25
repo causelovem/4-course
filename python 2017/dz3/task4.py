@@ -11,16 +11,6 @@ def seqGen(mas):
         tmp += 1
         yield res
 
-    # tmp = 0
-    # while 1:
-    #     if tmp >= len(mas):
-    #         yield res
-    #     for i in range(len(mas)):
-    #         if mas[i] <= mas[tmp]:
-    #             res.append(mas[i])
-    #     tmp += 1
-    #     yield res
-
 
 p = eval(input())
 N = eval(input())

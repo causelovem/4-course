@@ -1,31 +1,56 @@
 # DodgsonDet
 
 
-import itertools
+# import itertools
+import numpy
 
 
-def cnt(m):
-    res = 0
+def changeStr(m, sign):
+    if (m[0][0] != 0):
+        return (m, sign, 0)
+
     for i in range(len(m)):
-        res += m.index(i)
-        m.remove(i)
-    return res
+        if (m[i][0] != 0):
+            tmp = m[i]
+            m[i] = m[0]
+            m[0] = tmp
+            sign *= -1
+            break
+
+    if (m[0][0] == 0):
+        return (m, sign, -1)
+    return (m, sign, 0)
+
 
 p = list(eval(input()))
+N = len(p) - 1
 mas = list()
 mas.append(p)
-for i in range(len(p) - 1):
+for i in range(N):
     mas.append(list(eval(input())))
 
-if(len(p) > 8):
-    return 
+print(numpy.linalg.det(numpy.array(mas)))
 
-j = [x for x in range(len(mas))]
-g = itertools.permutations(j)
-res = 0
-for i in g:
-    tmp = 1
-    for k in range(len(mas)):
-        tmp *= mas[k][i[k]]
-    res += (-1)**cnt(list(i)) * tmp
-print(res)
+newMas = list()
+for i in range(N):
+    newMas.append(list(0 for i in range(N)))
+
+sign = 1
+tmp = 0
+
+for k in range(len(p) - 1):
+    (mas, sign, tmp) = changeStr(mas, sign)
+    if (tmp == -1):
+        break
+    for i in range(N):
+        for j in range(N):
+            newMas[i][j] = mas[0][0] * mas[i + 1][j + 1] - mas[0][j + 1] * mas[i + 1][0]
+    N -= 1
+    sign *= mas[0][0] ** N
+    mas = newMas.copy()
+    newMas.clear()
+    newMas = list()
+    for i in range(N):
+        newMas.append(list(0 for i in range(N)))
+
+print(int(mas[0][0] / sign))
