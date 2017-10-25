@@ -1,10 +1,6 @@
 # DodgsonDet
 
 
-# import itertools
-import numpy
-
-
 def changeStr(m, sign):
     if (m[0][0] != 0):
         return (m, sign, 0)
@@ -29,8 +25,6 @@ mas.append(p)
 for i in range(N):
     mas.append(list(eval(input())))
 
-print(numpy.linalg.det(numpy.array(mas)))
-
 newMas = list()
 for i in range(N):
     newMas.append(list(0 for i in range(N)))
@@ -53,4 +47,4 @@ for k in range(len(p) - 1):
     for i in range(N):
         newMas.append(list(0 for i in range(N)))
 
-print(int(mas[0][0] / sign))
+print(mas[0][0] // sign)
