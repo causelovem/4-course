@@ -7,10 +7,10 @@ inp = inp.split()
 d = {}
 
 for i in inp:
-    d[i] = 0
+    d[i.lower()] = 0
 
 for i in inp:
-    d[i] += 1
+    d[i.lower()] += 1
 
 max = 0
 for i in d.keys():
