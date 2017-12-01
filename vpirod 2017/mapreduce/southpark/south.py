@@ -2,6 +2,7 @@
 import mincemeat
 
 import nltk
+import csv
 
 fileIn = open("All-seasons.csv", 'r')
 # fileIn = open("test", 'r')
@@ -11,32 +12,17 @@ tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 first = 0
 data = []
 
-fileIn.readline()
-for line in fileIn:
-    if len(line) == 0:
-        break
+reader = csv.reader(fileIn)  # parcer
 
-    if line == '"\n':
-        first = 0
-        continue
-
-    line = line.lower()
-
-    if first == 0:
-        first = 1
-
-        li = line.split(",")
-        name = li[2]
-        speech = line[len(li[0] + li[1] + li[2]) + 3:]
-    else:
-        speech = line
-
-    speech = tokenizer.tokenize(speech)
-
+for line in reader:
+    name = line[2]
+    speech = tokenizer.tokenize(line[3].lower())
     data.append([name, speech])
 
+data.remove(data[0])  # deleted headers
 
-datasource = {}
+
+datasource = {}  # dict for mapreduce
 k = -1
 for i in data:
     for j in i[1]:
@@ -61,7 +47,7 @@ s.reducefn = reducefn
 results = s.run_server(password="changeme")
 
 
-res = {}
+res = {}  # calc
 
 for i in results:
     tmp = i.split()
@@ -76,7 +62,7 @@ for i in results:
 fileRes = open("fileRes.csv", 'w')
 
 fileRes.write("Character, number of unique words\n")
-for k in res:
+for k in res:  # out
     fileRes.write(k + ', ' + str(res[k]) + "\n")
 
 fileIn.close()
