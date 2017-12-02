@@ -5,38 +5,44 @@ import nltk
 import os
 
 files = os.listdir("./data")
+# files = os.listdir("./testdir")
 
-# fileIn = open("All-seasons.csv", 'r')
-# fileIn = open("test", 'r')
+files = sorted(files)
 
 tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 
 first = 0
 data = []
 
-s = "./data/" + files[0]
 
-file = open(s, "r")
+# fileIn = open("test", "r")
+
+# line = fileIn.read()
+
+# line = tokenizer.tokenize(line.lower())
+# data.append([line, "test"])
+
+# fileIn.close()
+
 
 for file in files:
     fileIn = open("./data/" + file, "r")
+    # fileIn = open("./testdir/" + file, "r")
 
     line = fileIn.read()
 
     line = tokenizer.tokenize(line.lower())
-    data.append([file, line])
+    data.append([line, file])
 
     fileIn.close()
-
-# data.remove(data[0])  # deleted headers
 
 
 datasource = {}  # dict for mapreduce
 k = -1
 for i in data:
-    for j in i[1]:
+    for j in i[0]:
         k += 1
-        datasource[k] = i[0] + " " + j
+        datasource[k] = j + " " + i[1]
 
 
 def mapfn(k, v):
@@ -55,23 +61,42 @@ s.reducefn = reducefn
 
 results = s.run_server(password="changeme")
 
+res = []
+for item in results.items():
+    res.append([item[0], item[1]])
 
-res = {}  # calc
+res = sorted(res)
 
-for i in results:
-    tmp = i.split()
-    tmp = len(tmp[-1]) + 1
 
-    if res.get(i[:-tmp]) is None:
-        res[i[:-tmp]] = 1
-    else:
-        res[i[:-tmp]] += 1
+matrix = []
+
+word = ""
+j = -1
+for i in res:
+    tmp = i[0].split()
+    if word != tmp[0]:
+        word = tmp[0]
+        j += 1
+        li = [0 for k in files]
+        li.append(0)
+        li[0] = word
+        matrix.append(li)  # new str in matrix
+
+    idx = files.index(tmp[1])  # file number
+    matrix[j][idx + 1] = i[1]
 
 
 fileRes = open("fileRes.csv", 'w')
 
-fileRes.write("Words, file\n")
-for k in res:  # out
-    fileRes.write(k + ', ' + str(res[k]) + "\n")
+fileRes.write("Words,")
+
+for i in files:
+    fileRes.write(i + ",")
+fileRes.write("\n")
+
+for i in matrix:
+    for j in i:
+        fileRes.write(str(j) + ",")
+    fileRes.write("\n")
 
 fileRes.close()
