@@ -14,17 +14,6 @@ tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 first = 0
 data = []
 
-
-# fileIn = open("test", "r")
-
-# line = fileIn.read()
-
-# line = tokenizer.tokenize(line.lower())
-# data.append([line, "test"])
-
-# fileIn.close()
-
-
 for file in files:
     fileIn = open("./data/" + file, "r")
     # fileIn = open("./testdir/" + file, "r")
