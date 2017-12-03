@@ -1,42 +1,44 @@
 #!/usr/bin/env python
 import mincemeat
-
 import nltk
 import csv
 
 fileIn = open("All-seasons.csv", 'r')
-# fileIn = open("test", 'r')
 
 tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 
 first = 0
-data = []
+datasource = {}
 
-reader = csv.reader(fileIn)  # parcer
+# parcer
+reader = csv.reader(fileIn)
 
-for line in reader:
-    name = line[2]
+it = iter(reader)
+next(it)
+
+# dict(name, [speech])
+for line in it:
+    name = line[2].replace(" and ", ", ").split(", ")
     speech = tokenizer.tokenize(line[3].lower())
-    data.append([name, speech])
 
-data.remove(data[0])  # deleted headers
-
-
-datasource = {}  # dict for mapreduce
-k = -1
-for i in data:
-    for j in i[1]:
-        k += 1
-        datasource[k] = i[0] + " " + j
+    for na in name:
+        if datasource.get(na) is None:
+            datasource[na] = speech
+        else:
+            datasource[na] += speech
 
 
 def mapfn(k, v):
-    yield v, 1
+    for i in v:
+        yield k, i
 
 
 def reducefn(k, vs):
-    result = sum(vs)
-    return result
+    result = set()
+
+    for i in vs:
+        result = result | set([i])
+    return len(result)
 
 
 s = mincemeat.Server()
@@ -46,24 +48,11 @@ s.reducefn = reducefn
 
 results = s.run_server(password="changeme")
 
-
-res = {}  # calc
-
-for i in results:
-    tmp = i.split()
-    tmp = len(tmp[-1]) + 1
-
-    if res.get(i[:-tmp]) is None:
-        res[i[:-tmp]] = 1
-    else:
-        res[i[:-tmp]] += 1
-
-
 fileRes = open("fileRes.csv", 'w')
 
 fileRes.write("Character, number of unique words\n")
-for k in res:  # out
-    fileRes.write(k + ', ' + str(res[k]) + "\n")
+for k in results.keys():  # out
+    fileRes.write(k + ', ' + str(results[k]) + "\n")
 
 fileIn.close()
 fileRes.close()
