@@ -10,37 +10,51 @@ class Triangle(object):
 
     def isEmpty(self):
         if (self.a + self.b > self.c) and (self.a + self.c > self.b) and (self.c + self.b > self.a):
-            return True
-        else:
             return False
+        else:
+            return True
 
     def __abs__(self):
         if self.isEmpty():
             return 0
         else:
-            p = (a + b + c) / 2
-            return math.sqrt(p* (p - a) * (p - b) * (p - c))
+            p = (self.a + self.b + self.c) / 2
+            return math.sqrt(p*(p - self.a)*(p - self.b)*(p - self.c))
     
-    # def __cmp__(self, other):
-    #     if (self.a == other.a) and (self.b == other.b) and (self.c == other.c):
-    #         return 0
-    #     if (self.a == other.a) and (self.b == other.c) and (self.c == other.b):
-    #         return 0
-    #     if (self.a == other.b) and (self.b == other.b) and (self.c == other.c):
-    #         return 0
+    def __eq__(self, other):
+        if ((self.a == other.a) or (self.a == other.b) or (self.a == other.c)):
+            if ((self.b == other.a) or (self.b == other.b) or (self.b == other.c)):
+                if ((self.c == other.a) or (self.c == other.b) or (self.c == other.c)):
+                    return True
+        return False
 
-    #     if abs(self) < abs(other):
-    #         return -1
+    def __ne__(self, other):
+        return not (self == other)
 
-    #     return 1
+    def __lt__(self, other):
+        if (self.__abs__() < other.__abs__()):
+            return True
+        return False
+
+    def __gt__(self, other):
+        if (self.__abs__() > other.__abs__()):
+            return True
+        return False
+
+    def __le__(self, other):
+        if (self.__abs__() <= other.__abs__()):
+            return True
+        return False
+
+    def __ge__(self, other):
+        if (self.__abs__() >= other.__abs__()):
+            return True
+        return False
 
     def __str__(self):
-        return "{:.2f}:{:.2f}:{:.2f}".format(float(self.a), float(self.b), float(self.c))
+        return "{:.1f}:{:.1f}:{:.1f}".format(float(self.a), float(self.b), float(self.c))
 
-Tri = Triangle(3,4,5), Triangle(5,4,3), Triangle(7,1,1), Triangle(5,5,5), Triangle(7,4,4)
-for a,b in zip(Tri[:-1],Tri[1:]):
-    print(a if a else b)
-    print("{}={:.2f} {}={:.2f}".format(a, abs(a), b, abs(b)))
-    print(a == b)
-    print(a >= b)
-    print(a < b)
+    def __bool__(self):
+        if not self.isEmpty():
+            return True
+        return False
