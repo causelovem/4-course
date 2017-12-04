@@ -50,9 +50,9 @@ results = s.run_server(password="changeme")
 
 fileRes = open("fileRes.csv", 'w')
 
-fileRes.write("Character, number of unique words\n")
+fileRes.write("Character,number of unique words\n")
 for k in results.keys():  # out
-    fileRes.write(k + ', ' + str(results[k]) + "\n")
+    fileRes.write(k + ',' + str(results[k]) + "\n")
 
 fileIn.close()
 fileRes.close()
