@@ -7,7 +7,6 @@ fileIn = open("All-seasons.csv", 'r')
 
 tokenizer = nltk.tokenize.RegexpTokenizer(r'\w+')
 
-first = 0
 datasource = {}
 
 # parcer
