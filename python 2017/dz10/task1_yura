@@ -1,0 +1,38 @@
+def checkLeft(v):
+	if not v.isidentifier():
+		raise Exception("invalid identifier '{}'".format(v))
+	return v
+def checkRight(v):
+	if v.find('=') != -1:
+		raise Exception()
+	return v
+
+def f(s):
+	if s[0] == '#':
+		return ''
+	if s.find('=') != -1:
+		var1 = checkLeft(s[:s.find('=')])
+
+		try:
+			var2 = checkRight(s[s.find('=') + 1:])
+		except Exception:
+			raise Exception("invalid assignment '{}'".format(s))
+		
+		glob[var1] = eval(var2, glob)
+		return ''
+	return eval(s, glob)
+
+glob = {}
+s = input()
+while(len(s) > 0):
+	try:
+		result = f(s)
+		if isinstance(result,str):
+			if len(result) > 0:
+				print(result)
+		else:
+			print(result)
+
+	except Exception as inst: 
+		print(inst)
+	s = input()
