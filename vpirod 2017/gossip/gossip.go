@@ -139,6 +139,7 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
                 //         neighbours = cp
 
                 //         for i := 0; i < tmp; i++ {
+                //             T++
                 //             time.Sleep(time.Millisecond * time.Duration(tick))
 
                 //             neig := rand.Intn(len(neighbours))
