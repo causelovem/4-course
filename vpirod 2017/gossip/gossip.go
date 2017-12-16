@@ -129,37 +129,37 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
 
                 sen.Sender = myIndex
                 message, _ := json.Marshal(sen)
-                if len(neighbours) != 0 {
-                    tmp := len(neighbours)
-                    cp := neighbours
-
-                    for j := 0; j < ttl; j++ {
-                        neighbours = cp
-
-                        for i := 0; i < tmp; i++ {
-                            time.Sleep(time.Millisecond * time.Duration(tick))
-
-                            neig := rand.Intn(len(neighbours))
-                            recieverAddress := "127.0.0.1:" + strconv.Itoa(2*(basePort)+neighbours[neig])
-
-                            sendMessage(message, myAddress, recieverAddress)
-
-                            fmt.Println("Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
-                        }
-                    }
-                }
                 // if len(neighbours) != 0 {
-                //     for i := 0; i < ttl; i++ {
-                //         time.Sleep(time.Millisecond * time.Duration(tick))
+                //     tmp := len(neighbours)
+                //     cp := neighbours
 
-                //         neig := rand.Intn(len(neighbours))
-                //         recieverAddress := "127.0.0.1:" + strconv.Itoa(2*(basePort)+neighbours[neig])
+                //     for j := 0; j < ttl; j++ {
+                //         neighbours = cp
 
-                //         sendMessage(message, myAddress, recieverAddress)
+                //         for i := 0; i < tmp; i++ {
+                //             time.Sleep(time.Millisecond * time.Duration(tick))
 
-                //         fmt.Println("Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
+                //             neig := rand.Intn(len(neighbours))
+                //             recieverAddress := "127.0.0.1:" + strconv.Itoa(2*(basePort)+neighbours[neig])
+
+                //             sendMessage(message, myAddress, recieverAddress)
+
+                //             fmt.Println("Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
+                //         }
                 //     }
                 // }
+                if len(neighbours) != 0 {
+                    for i := 0; i < ttl; i++ {
+                        time.Sleep(time.Millisecond * time.Duration(tick))
+
+                        neig := rand.Intn(len(neighbours))
+                        recieverAddress := "127.0.0.1:" + strconv.Itoa(2*(basePort)+neighbours[neig])
+
+                        sendMessage(message, myAddress, recieverAddress)
+
+                        fmt.Println("Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
+                    }
+                }
             }
         }
     }()
