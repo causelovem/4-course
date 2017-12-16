@@ -39,11 +39,10 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
     notificationDict := make(map[string]bool)
     channelN5 := make(chan []byte)
 
-    breakChan := make(chan time.Duration)
+    breakChan := make(chan string)
+    tickChan := make(chan int)
     closeChan := make(chan string)
     isMessage := 0
-
-    T := time.Now()
 
     // Receive
     go func() {
@@ -91,7 +90,7 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
                 }
 
                 if (myIndex == 0) && (len(notificationDict) == N-1) {
-                    breakChan <- time.Since(T)
+                    breakChan <- "break"
                 }
             }
         }
@@ -99,6 +98,7 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
 
     // Send
     go func() {
+        T := 0
         var sen Message
         myAddress := "127.0.0.1:" + strconv.Itoa(myPort)
         var neighbours []int
@@ -106,6 +106,8 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
         for {
             select {
             case <-closeChan:
+            case <- tickChan:
+                tickChan <- T
             case msg := <-channelN5:
                 neighbours = neighbours[0:0]
                 neighboursNodes, _ := connectionGraph.Neighbors(myIndex)
@@ -151,6 +153,7 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
                 if len(neighbours) != 0 {
                     for i := 0; i < ttl; i++ {
                         time.Sleep(time.Millisecond * time.Duration(tick))
+                        T++
 
                         neig := rand.Intn(len(neighbours))
                         recieverAddress := "127.0.0.1:" + strconv.Itoa(2*(basePort)+neighbours[neig])
@@ -160,15 +163,22 @@ func loop(connectionGraph graph.Graph, basePort int, myIndex int, tick int, ttl 
                         fmt.Println("Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
                     }
                 }
+            default:
+                T++
+                time.Sleep(time.Millisecond * time.Duration(tick))
             }
         }
     }()
 
-    T1 := <-breakChan
+    <-breakChan
+
+    tickChan <- 0
+
+    T := <- tickChan
+
     close(closeChan)
 
-    fmt.Println("Ticks = ", int(T1.Seconds()*1000)/tick)
-    fmt.Println("Time = ", T1)
+    fmt.Println("Ticks = ", T)
 
     return 0
 }
