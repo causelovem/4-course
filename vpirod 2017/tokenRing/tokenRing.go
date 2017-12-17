@@ -76,7 +76,7 @@ func loop(N int, timeout int, myIndex int) {
 
 							channelN5 <- readBuf[:size]
 						} else {
-
+							rec = Message{"send", dist, myIndex, data}
 						}
 					}
 				}
