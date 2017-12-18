@@ -15,7 +15,12 @@ Where - на какой узел отправить
 exit - выходит из управляющей программы
 
 ### Пример (запуск на двух консолях)
+Первая консоль   
+
     go run tokenRing.go 5 1000   
+
+Вторая консоль
+
     go run maintenance.go   
     <Type> <Dist> <Data> <Where> or 'exit'
     send 1 lol 2
