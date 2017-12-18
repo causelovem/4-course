@@ -73,9 +73,13 @@ func loop(N int, timeout int, myIndex int) {
 
 					if recM.TypeMessage == "exit" {
 						fmt.Println("    node ", myIndex, ": action exit")
+
+						if myIndex != 0 {
+							fmt.Println("    node ", myIndex, ": Only 0 node can exit")
+							continue
+						}
 						isMessage = 0
 						breakChan <- "exit"
-						time.Sleep(time.Millisecond * 1000)
 						continue
 					}
 					isMessage = 1

@@ -39,7 +39,7 @@ func main() {
 		}
 
 		node, _ := strconv.Atoi(parsed[3])
-		senPort += node
+		senPort = 40000 + node
 
 		dst, _ := strconv.Atoi(parsed[1])
 		sen := MessageMain{parsed[0], dst, parsed[2]}
