@@ -127,6 +127,7 @@ func loop(N int, timeout int, myIndex int) {
 						isMessage = 0
 						action = ""
 						resetChan <- "reset"
+						channelN5Main <- readBuf[:size]
 						continue
 					}
 
