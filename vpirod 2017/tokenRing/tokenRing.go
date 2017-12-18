@@ -1,7 +1,6 @@
 package main
 
 import (
-	"./graph"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -37,7 +36,7 @@ func loop(N int, timeout int, myIndex int) {
 	// basePort := 30000
 	// maintenancePort := 40000
 
-	myPort = 30000 + myIndex
+	myPort := 30000 + myIndex
 	maintenancePort := 40000 + myIndex
 
 	ServerAddrMain, _ := net.ResolveUDPAddr("udp", "127.0.0.1:"+strconv.Itoa(maintenancePort))
@@ -49,34 +48,118 @@ func loop(N int, timeout int, myIndex int) {
 	defer ServerConn.Close()
 
 	channelN5 := make(chan []byte)
+	channelN5Main := make(chan []byte)
 
+	resetChan := make(chan string)
+	breakChan := make(chan string)
 	closeChan := make(chan string)
 
-	// Reeive
+	// Maintenance
 	go func() {
-		var rec Message
-		readBuf := make([]byte, 1024)
+		var recM MessageMain
+		commandBuf := make([]byte, 1024)
 		isMessage := 0
 
 		for {
 			select {
 			case <-closeChan:
 			default:
+				sizeM, _, _ := ServerConnMain.ReadFromUDP(commandBuf)
+
+				if (sizeM != 0) && (isMessage == 0) {
+					fmt.Println("    node ", myIndex, ": Received service message", string(commandBuf[:sizeM]), "\n")
+
+					json.Unmarshal(commandBuf[:sizeM], &recM)
+
+					if recM.TypeMessage == "exit" {
+						fmt.Println("    node ", myIndex, ": action exit")
+						isMessage = 0
+						breakChan <- "exit"
+						time.Sleep(time.Millisecond * 1000)
+						continue
+					}
+					isMessage = 1
+
+					channelN5Main <- commandBuf[:sizeM]
+				}
+			}
+			<-channelN5Main
+			isMessage = 0
+		}
+	}()
+
+	// Reсeive
+	go func() {
+		var rec Message
+		var recM MessageMain
+		readBuf := make([]byte, 1024)
+		isMessage := 0
+
+		action := ""
+
+		if myIndex == 0 {
+			rec = Message{"empty", myIndex, myIndex, ""}
+			message, _ := json.Marshal(rec)
+			channelN5 <- message
+		}
+
+		for {
+			select {
+			case <-closeChan:
+			case serviceRec := <-channelN5Main:
+				// fmt.Println("    node ", myIndex, ": Received service message", string(serviceRec), "\n")
+				json.Unmarshal(serviceRec, &recM)
+				action = recM.TypeMessage
+
+				isMessage = 1
+			default:
 				size, addr, _ := ServerConn.ReadFromUDP(readBuf)
 
 				if size != 0 {
 					json.Unmarshal(readBuf[:size], &rec)
+
+					if action == "drop" {
+						fmt.Println("    node ", myIndex, ": action", action)
+						isMessage = 0
+						action = ""
+						resetChan <- "reset"
+						continue
+					}
+
 					if (rec.TypeMessage == "send") || (rec.TypeMessage == "confirmation") {
 						fmt.Println("node ", myIndex, ": Received ", string(readBuf[:size]), " from ", addr, "who ", ServerAddr, "\n")
 
-						channelN5 <- readBuf[:size]
-					} else if rec.TyoeMessage == "empty" {
+						if rec.Dist == myIndex {
+							if rec.TypeMessage == "send" {
+								rec = Message{"confirmation", rec.Origin, myIndex, ""}
+							} else if rec.TypeMessage == "confirmation" {
+								fmt.Println("    node ", myIndex, ": Confirmed")
+
+								rec = Message{"empty", myIndex, myIndex, ""}
+							}
+
+							message, _ := json.Marshal(rec)
+							channelN5 <- message
+						} else {
+							channelN5 <- readBuf[:size]
+						}
+					} else if rec.TypeMessage == "empty" {
 						if isMessage == 0 {
 							fmt.Println("node ", myIndex, ": Received ", string(readBuf[:size]), " from ", addr, "who ", ServerAddr, "\n")
 
 							channelN5 <- readBuf[:size]
 						} else {
-							rec = Message{"send", dist, myIndex, data}
+							fmt.Println("    node ", myIndex, ": action", action)
+
+							rec = Message{"send", recM.Dist, myIndex, recM.Data}
+
+							message, _ := json.Marshal(rec)
+							channelN5 <- message
+
+							channelN5Main <- message
+
+							isMessage = 0
+							action = ""
 						}
 					}
 				}
@@ -86,21 +169,60 @@ func loop(N int, timeout int, myIndex int) {
 
 	// Send
 	go func() {
+		timeoutTime := time.Millisecond * time.Duration(timeout*N+(2+myIndex)*timeout)
+
 		var sen Message
 		myAddress := "127.0.0.1:" + strconv.Itoa(myPort)
+
+		timer := time.NewTimer(time.Millisecond * time.Duration(timeout*N+(2+myIndex)*timeout))
+
 		for {
 			select {
 			case <-closeChan:
+			case <-resetChan:
+				fmt.Println("    node ", myIndex, ": Reset after drop")
+
+				timer.Stop()
+				timer.Reset(time.Millisecond * time.Duration(timeout*N+(2+myIndex+N)*timeout))
+			case <-timer.C:
+				fmt.Println("    node ", myIndex, ": Timeout")
+
+				sen = Message{"empty", myIndex, myIndex, ""}
+
+				message, _ := json.Marshal(sen)
+
+				senPort := myPort + N + 1
+				if myIndex == N-1 {
+					senPort = myPort - myIndex + N
+				}
+				recieverAddress := "127.0.0.1:" + strconv.Itoa(senPort)
+				sendMessage(message, myAddress, recieverAddress)
+
+				fmt.Println("node ", myIndex, ": Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
+
+				timer.Stop()
+				timer.Reset(timeoutTime)
 			case msg := <-channelN5:
 				time.Sleep(time.Millisecond * time.Duration(timeout))
 
-				recieverAddress := "127.0.0.1:" + strconv.Itoa(myPort+N)
+				senPort := myPort + N + 1
+				if myIndex == N-1 {
+					senPort = myPort - myIndex + N
+				}
+				recieverAddress := "127.0.0.1:" + strconv.Itoa(senPort)
 				sendMessage(msg, myAddress, recieverAddress)
 
-				fmt.Println("node ", myIndex, ": Sended ", string(message), " to ", recieverAddress, "from ", myAddress, "\n")
+				fmt.Println("node ", myIndex, ": Sended ", string(msg), " to ", recieverAddress, "from ", myAddress, "\n")
+
+				timer.Stop()
+				timer.Reset(timeoutTime)
 			}
 		}
 	}()
+
+	<-breakChan
+
+	close(closeChan)
 }
 
 func main() {
@@ -115,11 +237,8 @@ func main() {
 	N, _ := strconv.Atoi(os.Args[1])
 	timeout, _ := strconv.Atoi(os.Args[2])
 
-	exitChan := make(chan string)
-
-	for i := 0; i < N; i++ {
+	for i := 1; i < N; i++ {
 		go loop(N, timeout, i)
 	}
-
-	<-exitChan
+	loop(N, timeout, 0)
 }
