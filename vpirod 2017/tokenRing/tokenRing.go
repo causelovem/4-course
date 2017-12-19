@@ -6,7 +6,9 @@ import (
 	"math/rand"
 	"net"
 	"os"
+	"sort"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -131,7 +133,7 @@ func loop(N int, timeout int, myIndex int) {
 						continue
 					}
 
-					if (rec.TypeMessage == "send") || (rec.TypeMessage == "confirmation") {
+					if (rec.TypeMessage == "send") || (rec.TypeMessage == "confirmation") || (rec.TypeMessage == "election") || (rec.TypeMessage == "electionResult") {
 						fmt.Println("node ", myIndex, ": Received ", string(readBuf[:size]), " from ", addr, "who ", ServerAddr, "\n")
 
 						if rec.Dist == myIndex {
@@ -141,11 +143,32 @@ func loop(N int, timeout int, myIndex int) {
 								fmt.Println("    node ", myIndex, ": Confirmed")
 
 								rec = Message{"empty", myIndex, myIndex, ""}
+							} else if rec.TypeMessage == "election" {
+								fmt.Println("    node ", myIndex, ": Election ended, send result")
+								data := strings.Split(rec.Data, " ")
+								data[len(data)-1] = strings.Replace(data[len(data)-1], "\n", "", -1)
+
+								sort.Strings(data)
+
+								where, _ := strconv.Atoi(data[len(data)-1])
+								rec = Message{"electionResult", where, myIndex, ""}
+							} else if rec.TypeMessage == "electionResult" {
+								fmt.Println("    node ", myIndex, ": Election result received")
+
+								rec = Message{"empty", myIndex, myIndex, ""}
 							}
 
 							message, _ := json.Marshal(rec)
 							channelN5 <- message
 						} else {
+							if rec.TypeMessage == "election" {
+
+								rec.Data += " " + strconv.Itoa(myIndex)
+								message, _ := json.Marshal(rec)
+								channelN5 <- message
+								continue
+							}
+
 							channelN5 <- readBuf[:size]
 						}
 					} else if rec.TypeMessage == "empty" {
@@ -190,9 +213,11 @@ func loop(N int, timeout int, myIndex int) {
 				timer.Stop()
 				timer.Reset(time.Millisecond * time.Duration(timeout*N+(2+myIndex+N)*timeout))
 			case <-timer.C:
-				fmt.Println("    node ", myIndex, ": Timeout")
+				fmt.Println("    node ", myIndex, ": Timeout, starting election")
 
-				sen = Message{"empty", myIndex, myIndex, ""}
+				data := strconv.Itoa(myIndex)
+
+				sen = Message{"election", myIndex, myIndex, data}
 
 				message, _ := json.Marshal(sen)
 
