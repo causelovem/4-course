@@ -1,0 +1,17 @@
+N 2 int
+a 0.8 float
+b 0.2 float
+wa 0.1 float
+wb 0.1 float
+k 2 int
+eMin 0 int
+eMax 2 int
+lIn 0 float
+lOut 0.6 float
+d 0 float
+dStep 0.7 float
+n 2000 int
+dt 0.01 float
+HPLANKS 1 float
+graphs 5 int
+R-file fileR

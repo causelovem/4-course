@@ -1,0 +1,5 @@
+#!/bin/bash
+
+echo "Monte-Carlo method for cos(x): int( cos(x) ) from 0 to 1 = "
+N=1000
+for ((i=0; i < $N; i++)) do echo "$RANDOM / 32768" | bc -l; done | parallel echo 'c\({}\)' | bc -l | xargs echo | tr ' ' '+' | sed 's/^/\(/g' | sed 's/$/\)\//g' | sed "s/$/$N/g" | bc -l
